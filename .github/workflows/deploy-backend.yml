@@ -33,4 +33,5 @@ jobs:
             cd notification-system-backend
             git pull origin master
             cp ~/app/.env .env
+            sudo docker system prune -f
             sudo docker-compose up -d --build
