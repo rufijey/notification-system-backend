@@ -321,4 +321,13 @@ export class PrismaChannelRepository implements IChannelRepository {
       joinedAt: m.joinedAt,
     }));
   }
+
+  async updateTitle(channelId: string, title: string): Promise<Channel> {
+    const channel = await this.prisma.channel.update({
+      where: { id: channelId },
+      data: { title },
+      include: { members: true },
+    });
+    return ChannelMapper.toDomain(channel);
+  }
 }

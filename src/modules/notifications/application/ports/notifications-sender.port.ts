@@ -22,6 +22,11 @@ export interface INotificationsSender {
   onChannelJoined(members: string[], channel: any): void;
   sendChannelUpdated(
     channelId: string,
-    payload: { channelId: string; userId: string; role: string },
+    payload: {
+      channelId: string;
+      userId?: string;
+      role?: string;
+      title?: string;
+    },
   ): void;
 }

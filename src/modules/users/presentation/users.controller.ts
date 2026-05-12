@@ -8,12 +8,14 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  Patch,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { LoginUseCase } from '../application/login.use-case';
 import { RegisterUseCase } from '../application/register.use-case';
 import { RefreshTokensUseCase } from '../application/refresh-tokens.use-case';
 import { LogoutUseCase } from '../application/logout.use-case';
+import { UpdateProfileUseCase } from '../application/update-profile.use-case';
 import {
   IUsersRepository,
   USERS_REPOSITORY,
@@ -46,6 +48,7 @@ export class UsersController {
     private readonly registerUseCase: RegisterUseCase,
     private readonly refreshTokensUseCase: RefreshTokensUseCase,
     private readonly logoutUseCase: LogoutUseCase,
+    private readonly updateProfileUseCase: UpdateProfileUseCase,
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: IUsersRepository,
   ) {}
@@ -130,6 +133,20 @@ export class UsersController {
     await this.logoutUseCase.execute({ userId, refreshToken });
     res.clearCookie('refreshToken');
     return { notification: 'Logged out successfully' };
+  }
+
+  @Patch('profile')
+  @UseGuards(AtGuard)
+  @HttpCode(HttpStatus.OK)
+  async updateProfile(
+    @Req() req: RequestWithUser,
+    @Body() body: { fullName: string },
+  ) {
+    const username = req.user.sub;
+    return this.updateProfileUseCase.execute({
+      username,
+      fullName: body.fullName,
+    });
   }
 
   private setRefreshTokenCookie(res: Response, refreshToken: string) {

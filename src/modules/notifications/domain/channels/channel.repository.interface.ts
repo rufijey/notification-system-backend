@@ -62,4 +62,5 @@ export interface IChannelRepository {
     isId: boolean,
   ): Promise<Channel[]>;
   getMembers(channelId: string): Promise<ChannelMemberDetails[]>;
+  updateTitle(channelId: string, title: string): Promise<Channel>;
 }

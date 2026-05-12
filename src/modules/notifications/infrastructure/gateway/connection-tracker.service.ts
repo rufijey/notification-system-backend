@@ -64,7 +64,12 @@ export class ConnectionTrackerService implements INotificationsSender {
 
   sendChannelUpdated(
     channelId: string,
-    payload: { channelId: string; userId: string; role: string },
+    payload: {
+      channelId: string;
+      userId?: string;
+      role?: string;
+      title?: string;
+    },
   ): void {
     if (this.server) {
       this.server.to(channelId).emit(SocketEvent.CHANNEL_UPDATED, payload);

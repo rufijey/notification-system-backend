@@ -14,6 +14,7 @@ import { AddMemberUseCase } from './application/channels/add-member.use-case';
 import { LeaveChannelUseCase } from './application/channels/leave-channel.use-case';
 import { UpdateMemberRoleUseCase } from './application/channels/update-member-role.use-case';
 import { SearchChannelsUseCase } from './application/channels/search-channels.use-case';
+import { RenameChannelUseCase } from './application/channels/rename-channel.use-case';
 import { GetGlobalNotificationsUseCase } from './application/notifications/get-global-notifications.use-case';
 import { GetChannelDetailsUseCase } from './application/channels/get-channel-details.use-case';
 import { GetMembersUseCase } from './application/channels/get-members.use-case';
@@ -51,6 +52,7 @@ import { RedisFailedNotificationsQueue } from './infrastructure/redis/redis-fail
     LeaveChannelUseCase,
     UpdateMemberRoleUseCase,
     SearchChannelsUseCase,
+    RenameChannelUseCase,
     AcknowledgeNotificationUseCase,
     ReadNotificationUseCase,
     SendPendingOnConnectUseCase,
@@ -105,6 +107,7 @@ import { RedisFailedNotificationsQueue } from './infrastructure/redis/redis-fail
     MarkAllAsReadUseCase,
     UpdateMemberRoleUseCase,
     SearchChannelsUseCase,
+    RenameChannelUseCase,
     GetGlobalNotificationsUseCase,
     GetChannelDetailsUseCase,
     GetMembersUseCase,

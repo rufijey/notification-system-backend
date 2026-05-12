@@ -1,0 +1,37 @@
+name: Deploy Backend
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Copy docker-compose via scp
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "~/app"
+          
+      - name: Execute SSH commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/app
+            if [ ! -d "notification-system-backend" ]; then
+              git clone https://github.com/rufijey/notification-system-backend notification-system-backend
+            fi
+            cd notification-system-backend
+            git pull origin master
+            cp ~/app/.env .env
+            cd ~/app
+            sudo docker-compose up -d --build

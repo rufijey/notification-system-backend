@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Param,
   Query,
@@ -22,6 +23,7 @@ import { AddMemberUseCase } from '../application/channels/add-member.use-case';
 import { LeaveChannelUseCase } from '../application/channels/leave-channel.use-case';
 import { UpdateMemberRoleUseCase } from '../application/channels/update-member-role.use-case';
 import { SearchChannelsUseCase } from '../application/channels/search-channels.use-case';
+import { RenameChannelUseCase } from '../application/channels/rename-channel.use-case';
 import { JoinChannelUseCase } from '../application/channels/join-channel.use-case';
 import { GetGlobalNotificationsUseCase } from '../application/notifications/get-global-notifications.use-case';
 import { GetChannelDetailsUseCase } from '../application/channels/get-channel-details.use-case';
@@ -55,6 +57,7 @@ export class NotificationsController {
     private readonly leaveChannelUseCase: LeaveChannelUseCase,
     private readonly updateMemberRoleUseCase: UpdateMemberRoleUseCase,
     private readonly searchChannelsUseCase: SearchChannelsUseCase,
+    private readonly renameChannelUseCase: RenameChannelUseCase,
     private readonly joinChannelUseCase: JoinChannelUseCase,
     private readonly getGlobalNotificationsUseCase: GetGlobalNotificationsUseCase,
     private readonly getChannelDetailsUseCase: GetChannelDetailsUseCase,
@@ -255,6 +258,26 @@ export class NotificationsController {
     @Param('channelId') channelId: string,
   ) {
     await this.joinChannelUseCase.execute({ userId: req.user.sub, channelId });
+    return { success: true };
+  }
+
+  @Patch('channels/:channelId/title')
+  async renameChannel(
+    @Req() req: AuthenticatedRequest,
+    @Param('channelId') channelId: string,
+    @Body('title') title: string,
+  ) {
+    await this.renameChannelUseCase.execute({
+      channelId,
+      adminId: req.user.sub,
+      title,
+    });
+
+    this.sender.sendChannelUpdated(channelId, {
+      channelId,
+      title,
+    });
+
     return { success: true };
   }
 
