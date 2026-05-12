@@ -11,9 +11,9 @@ import {
   Delete,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ClientProxy } from '@nestjs/microservices';
 import { SendNotificationDto } from './dto/send-notification.dto';
 import { CreateChannelDto } from './dto/create-channel.dto';
+import { ProcessNotificationUseCase } from '../application/notifications/process-notification.use-case';
 import { GetChannelHistoryUseCase } from '../application/notifications/get-channel-history.use-case';
 import { GetChannelsUseCase } from '../application/channels/get-channels.use-case';
 import { MarkAllAsReadUseCase } from '../application/notifications/mark-all-as-read.use-case';
@@ -46,7 +46,7 @@ interface AuthenticatedRequest extends Request {
 @UseGuards(AtGuard)
 export class NotificationsController {
   constructor(
-    @Inject('RMQ_SERVICE') private readonly client: ClientProxy,
+    private readonly processNotificationUseCase: ProcessNotificationUseCase,
     private readonly getChannelHistoryUseCase: GetChannelHistoryUseCase,
     private readonly getChannelsUseCase: GetChannelsUseCase,
     private readonly markAllAsReadUseCase: MarkAllAsReadUseCase,
@@ -99,15 +99,14 @@ export class NotificationsController {
     @Body() dto: SendNotificationDto,
   ) {
     const senderId = req.user.sub;
-    this.client.emit('notification_created', {
-      channelId: dto.channelId,
+    return this.processNotificationUseCase.execute(
+      dto.channelId,
       senderId,
-      text: dto.text,
-      clientNotificationId: dto.clientNotificationId,
-      priority: dto.priority,
-      parentNotificationId: dto.parentNotificationId,
-    });
-    return { success: true };
+      dto.text,
+      dto.clientNotificationId,
+      dto.priority,
+      dto.parentNotificationId,
+    );
   }
 
   @Get('channels')

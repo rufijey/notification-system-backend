@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ProcessNotificationUseCase } from './application/notifications/process-notification.use-case';
 import { SyncNotificationsUseCase } from './application/notifications/sync-notifications.use-case';
@@ -19,8 +18,9 @@ import { GetGlobalNotificationsUseCase } from './application/notifications/get-g
 import { GetChannelDetailsUseCase } from './application/channels/get-channel-details.use-case';
 import { GetMembersUseCase } from './application/channels/get-members.use-case';
 import { NotificationsGateway } from './presentation/notifications.gateway';
-import { NotificationsConsumer } from './presentation/notifications.consumer';
 import { NotificationsController } from './presentation/notifications.controller';
+import { BullModule } from '@nestjs/bullmq';
+import { FailedNotificationsProcessor } from './infrastructure/redis/failed-notifications.processor';
 import { ConnectionTrackerService } from './infrastructure/gateway/connection-tracker.service';
 import { MESSENGER_SENDER } from './application/ports/notifications-sender.port';
 import { UsersModule } from '../users/users.module';
@@ -33,26 +33,14 @@ import { SubscribePushUseCase } from './application/push/subscribe-push.use-case
 import { PrismaPushSubscriptionRepository } from './infrastructure/repositories/prisma-push-subscription.repository';
 import { SendWebPushOnNotificationCreatedListener } from './infrastructure/push/send-web-push-on-notification-created.listener';
 import { WsConnectionService } from './infrastructure/gateway/ws-connection.service';
+import { FAILED_NOTIFICATIONS_QUEUE } from './application/ports/failed-notifications-queue.port';
+import { RedisFailedNotificationsQueue } from './infrastructure/redis/redis-failed-notifications-queue';
 
 @Module({
   imports: [
     UsersModule,
     EventEmitterModule.forRoot(),
-    ClientsModule.register([
-      {
-        name: 'RMQ_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: [
-            process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672',
-          ],
-          queue: 'notifications_queue',
-          queueOptions: {
-            durable: true,
-          },
-        },
-      },
-    ]),
+    BullModule.registerQueue({ name: 'failed_notifications' }),
   ],
   providers: [
     ProcessNotificationUseCase,
@@ -79,6 +67,7 @@ import { WsConnectionService } from './infrastructure/gateway/ws-connection.serv
     WebPushService,
     SendWebPushOnNotificationCreatedListener,
     WsConnectionService,
+    FailedNotificationsProcessor,
     {
       provide: MESSENGER_SENDER,
       useExisting: ConnectionTrackerService,
@@ -95,8 +84,12 @@ import { WsConnectionService } from './infrastructure/gateway/ws-connection.serv
       provide: 'PUSH_REPO',
       useClass: PrismaPushSubscriptionRepository,
     },
+    {
+      provide: FAILED_NOTIFICATIONS_QUEUE,
+      useClass: RedisFailedNotificationsQueue,
+    },
   ],
-  controllers: [NotificationsConsumer, NotificationsController],
+  controllers: [NotificationsController],
   exports: [
     ProcessNotificationUseCase,
     SyncNotificationsUseCase,

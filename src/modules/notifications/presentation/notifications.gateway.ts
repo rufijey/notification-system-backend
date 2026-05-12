@@ -21,8 +21,7 @@ import { WsConnectionService } from '../infrastructure/gateway/ws-connection.ser
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class NotificationsGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
@@ -33,7 +32,7 @@ export class NotificationsGateway
     private readonly sendPendingUseCase: SendPendingOnConnectUseCase,
     private readonly syncNotificationsUseCase: SyncNotificationsUseCase,
     private readonly wsConnectionService: WsConnectionService,
-  ) {}
+  ) { }
 
   afterInit(server: Server) {
     this.connectionTracker.setServer(server);
@@ -46,10 +45,6 @@ export class NotificationsGateway
     } catch (e) {
       client.disconnect();
     }
-  }
-
-  async handleDisconnect(client: Socket) {
-    // Connection tracking status removed as online user status is out of scope.
   }
 
   @UseGuards(WsAtGuard)

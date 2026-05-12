@@ -15,7 +15,7 @@ export class WsAtGuard implements CanActivate {
   constructor(
     @Inject(TOKEN_SERVICE)
     private readonly tokenService: ITokenService,
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
