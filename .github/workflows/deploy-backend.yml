@@ -16,7 +16,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.prod.yml"
           target: "~/app"
           
       - name: Execute SSH commands
@@ -37,4 +37,4 @@ jobs:
             sudo apt-get clean || true
             sudo docker builder prune -af || true
             sudo docker system prune -af --volumes || true
-            sudo docker-compose up -d --build
+            sudo docker-compose -f docker-compose.prod.yml up -d --build
