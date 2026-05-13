@@ -32,7 +32,7 @@ jobs:
             fi
             cd notification-system-backend
             git pull origin master
-            cp ~/app/.env .env
+            cp ~/.env_production .env
             
             sudo journalctl --vacuum-size=50M || true
             sudo apt-get clean || true

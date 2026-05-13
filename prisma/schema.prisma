@@ -28,16 +28,16 @@ enum NotificationPriority {
 }
 
 model User {
-  username           String             @id
-  fullName           String
-  email              String             @unique
-  passwordHash       String
-  refreshTokens      RefreshToken[]
-  notifications      Notification[]     @relation("SenderNotifications")
-  channelMembers     ChannelMember[]
-  pushSubscriptions  PushSubscription[]
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  username          String             @id
+  fullName          String
+  email             String             @unique
+  passwordHash      String
+  refreshTokens     RefreshToken[]
+  notifications     Notification[]     @relation("SenderNotifications")
+  channelMembers    ChannelMember[]
+  pushSubscriptions PushSubscription[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 model Channel {
@@ -52,24 +52,24 @@ model Channel {
 }
 
 model RefreshToken {
-  id           String   @id @default(uuid())
-  hashedToken  String
-  userId       String
-  user         User     @relation(fields: [userId], references: [username], onDelete: Cascade)
-  expiresAt    DateTime
-  userAgent    String?
-  ip           String?
-  createdAt    DateTime @default(now())
+  id          String   @id @default(uuid())
+  hashedToken String
+  userId      String
+  user        User     @relation(fields: [userId], references: [username], onDelete: Cascade)
+  expiresAt   DateTime
+  userAgent   String?
+  ip          String?
+  createdAt   DateTime @default(now())
 }
 
 model ChannelMember {
   channelId        String
-  channel          Channel      @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channel          Channel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
   userId           String
-  user             User         @relation(fields: [userId], references: [username], onDelete: Cascade)
-  role             ChannelRole  @default(SUBSCRIBER)
-  joinedAt         DateTime     @default(now())
-  lastReadSequence Int          @default(0)
+  user             User        @relation(fields: [userId], references: [username], onDelete: Cascade)
+  role             ChannelRole @default(SUBSCRIBER)
+  joinedAt         DateTime    @default(now())
+  lastReadSequence Int         @default(0)
 
   @@id([channelId, userId])
 }

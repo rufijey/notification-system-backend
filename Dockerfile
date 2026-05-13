@@ -67,6 +67,8 @@ COPY --from=production-deps /app/node_modules ./node_modules
 COPY --from=production-deps /app/package*.json ./
 COPY --from=production-deps /app/prisma ./prisma
 
+COPY prisma.config.ts ./
+
 EXPOSE 3000
 
 # Install prisma globally to run migrations on startup
