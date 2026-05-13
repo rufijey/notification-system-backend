@@ -17,7 +17,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "docker-compose.prod.yml"
-          target: "~/app"
+          target: "~/app/notification-system-backend"
           
       - name: Execute SSH commands
         uses: appleboy/ssh-action@v1.0.3
@@ -33,10 +33,6 @@ jobs:
             cd notification-system-backend
             git pull origin master
             cp ~/.env_production .env
-            
-            sudo journalctl --vacuum-size=50M || true
-            sudo apt-get clean || true
             sudo docker builder prune -af || true
-            sudo docker system prune -af --volumes || true
-            sudo docker compose -f docker-compose.prod.yml up -d --build
+            sudo docker compose -f docker-compose.prod.yml up -d --build --force-recreate
             sudo docker ps
