@@ -19,7 +19,12 @@ import { SocketEvent } from '../domain/notifications/socket-events.enum';
 import { SyncNotificationsUseCase } from '../application/notifications/sync-notifications.use-case';
 import { WsConnectionService } from '../infrastructure/gateway/ws-connection.service';
 
-@WebSocketGateway({ cors: { origin: '*' } })
+@WebSocketGateway({
+  path: '/api/socket.io',
+  cors: {
+    origin: '*',
+  },
+})
 export class NotificationsGateway
   implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer()
