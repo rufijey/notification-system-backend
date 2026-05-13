@@ -1,4 +1,5 @@
 name: Deploy Backend
+
 on:
   push:
     branches: [ "master" ]
@@ -9,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Copy docker-compose via scp
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -18,7 +19,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "docker-compose.prod.yml"
           target: "~/app/notification-system-backend"
-          
+
       - name: Execute SSH commands
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -26,12 +27,14 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -e
             cd ~/app
             if [ ! -d "notification-system-backend" ]; then
               git clone https://github.com/rufijey/notification-system-backend notification-system-backend
             fi
             cd notification-system-backend
-            git pull origin master
+            git fetch origin master
+            git reset --hard origin/master
             cp ~/.env_production .env
             sudo docker builder prune -af || true
             sudo docker compose -f docker-compose.prod.yml up -d --build --force-recreate
