@@ -19,7 +19,7 @@ import { SocketEvent } from '../domain/notifications/socket-events.enum';
 import { SyncNotificationsUseCase } from '../application/notifications/sync-notifications.use-case';
 import { WsConnectionService } from '../infrastructure/gateway/ws-connection.service';
 
-WebSocketGateway({
+@WebSocketGateway({
   path: '/api/socket.io/',
   cors: {
     origin: process.env.FRONTEND_URL,

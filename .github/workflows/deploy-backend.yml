@@ -38,4 +38,12 @@ jobs:
             cp ~/.env_production .env
             sudo docker builder prune -af || true
             sudo docker compose -f docker-compose.prod.yml up -d --build --force-recreate
+            sleep 5
+            STATUS=$(sudo docker inspect -f '{{.State.Status}}' notification-system-backend-api-1)
+            
+            if [ "$STATUS" != "running" ]; then
+              echo "Container is not running! Status: $STATUS"
+              sudo docker logs notification-system-backend-api-1
+              exit 1
+            fi
             sudo docker ps
