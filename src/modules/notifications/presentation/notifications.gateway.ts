@@ -20,7 +20,7 @@ import { SyncNotificationsUseCase } from '../application/notifications/sync-noti
 import { WsConnectionService } from '../infrastructure/gateway/ws-connection.service';
 
 WebSocketGateway({
-  path: '/api/socket.io',
+  path: '/api/socket.io/',
   cors: {
     origin: process.env.FRONTEND_URL,
     credentials: true,
