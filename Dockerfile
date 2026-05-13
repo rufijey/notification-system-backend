@@ -66,7 +66,6 @@ COPY --from=builder /app/dist ./dist
 COPY --from=production-deps /app/node_modules ./node_modules
 COPY --from=production-deps /app/package*.json ./
 COPY --from=production-deps /app/prisma ./prisma
-
 COPY prisma.config.ts ./
 
 EXPOSE 3000
@@ -74,4 +73,4 @@ EXPOSE 3000
 # Install prisma globally to run migrations on startup
 RUN npm install -g prisma@7.7.0
 
-CMD ["sh", "-c", "prisma migrate deploy && node dist/main"]
+CMD ["sh", "-c", "prisma migrate deploy && node dist/src/main"]
