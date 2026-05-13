@@ -34,7 +34,7 @@ export class ProcessNotificationUseCase {
     priority?: NotificationPriority,
     parentNotificationId?: string,
     throwOnError = false,
-  ): Promise<{ success: boolean; status: 'sent' | 'queued' }> {
+  ): Promise<{ success: boolean; status: 'sent' | 'queued'; notification?: any }> {
     try {
       if (clientNotificationId) {
         const existing = await this.repository.findByClientNotificationId(
@@ -44,7 +44,22 @@ export class ProcessNotificationUseCase {
           console.log(
             `[Deduplication] Notification with clientNotificationId ${clientNotificationId} already exists in DB. Skipping creation.`,
           );
-          return { success: true, status: 'sent' };
+          return {
+            success: true,
+            status: 'sent',
+            notification: {
+              id: existing.id,
+              channelId: existing.channelId,
+              senderId: existing.senderId,
+              text: existing.text,
+              status: 'DELIVERED',
+              createdAt: existing.createdAt,
+              sequence: existing.sequence,
+              clientNotificationId: existing.clientNotificationId,
+              priority: existing.priority,
+              parentNotificationId: existing.parentNotificationId,
+            },
+          };
         }
       }
 
@@ -86,7 +101,22 @@ export class ProcessNotificationUseCase {
         new NotificationCreatedEvent(savedNotification),
       );
 
-      return { success: true, status: 'sent' };
+      return {
+        success: true,
+        status: 'sent',
+        notification: {
+          id: savedNotification.id,
+          channelId: savedNotification.channelId,
+          senderId: savedNotification.senderId,
+          text: savedNotification.text,
+          status: 'DELIVERED',
+          createdAt: savedNotification.createdAt,
+          sequence: savedNotification.sequence,
+          clientNotificationId: savedNotification.clientNotificationId,
+          priority: savedNotification.priority,
+          parentNotificationId: savedNotification.parentNotificationId,
+        },
+      };
     } catch (error) {
       if (throwOnError) {
         throw error;

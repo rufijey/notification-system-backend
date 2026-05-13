@@ -33,23 +33,28 @@ export class SendPendingOnConnectUseCase {
         syncRequests,
       );
 
-    const channelStatusCache: Record<string, number> = {};
+    const channelStatusCache: Record<string, { otherLastRead: number; myLastRead: number }> = {};
 
     for (const notification of missedNotifications) {
       if (channelStatusCache[notification.channelId] === undefined) {
-        channelStatusCache[notification.channelId] =
-          await this.channelRepository.getOtherMembersLastReadSequence(
-            notification.channelId,
-            userId,
-          );
+        const otherLastRead = await this.channelRepository.getOtherMembersLastReadSequence(
+          notification.channelId,
+          userId,
+        );
+        const myLastRead = await this.channelRepository.getUserLastReadSequence(
+          notification.channelId,
+          userId,
+        );
+        channelStatusCache[notification.channelId] = { otherLastRead, myLastRead };
       }
 
-      const otherLastRead = channelStatusCache[notification.channelId];
+      const { otherLastRead, myLastRead } = channelStatusCache[notification.channelId];
       const status = Notification.determineStatus(
         notification.senderId,
         userId,
         notification.sequence,
         otherLastRead,
+        myLastRead,
       );
 
       this.sender.send(userId, {

@@ -58,6 +58,12 @@ export class GetChannelHistoryUseCase {
         userId,
       );
 
+    const myLastRead =
+      await this.channelRepository.getUserLastReadSequence(
+        channelId,
+        userId,
+      );
+
     return {
       items: items.map((m) => ({
         id: m.id,
@@ -72,6 +78,7 @@ export class GetChannelHistoryUseCase {
           userId,
           m.sequence,
           otherLastRead,
+          myLastRead,
         ),
         priority: m.priority as NotificationPriority,
         parentNotificationId: m.parentNotificationId,

@@ -74,9 +74,12 @@ export class Notification {
     currentUserId: string,
     notificationSequence: number,
     otherMembersLastReadSequence: number,
+    currentUserLastReadSequence: number = 0,
   ): DeliveryStatus {
     if (senderId !== currentUserId) {
-      return DeliveryStatus.READ;
+      return notificationSequence <= currentUserLastReadSequence
+        ? DeliveryStatus.READ
+        : DeliveryStatus.DELIVERED;
     }
 
     return notificationSequence <= otherMembersLastReadSequence

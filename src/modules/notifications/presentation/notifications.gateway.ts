@@ -47,8 +47,7 @@ export class NotificationsGateway
 
   async handleConnection(client: Socket) {
     try {
-      const userId = await this.wsConnectionService.authenticateAndJoinRooms(client);
-      await this.sendPendingUseCase.execute(userId).catch(console.error);
+      await this.wsConnectionService.authenticateAndJoinRooms(client);
     } catch (e) {
       client.disconnect();
     }

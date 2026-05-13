@@ -45,19 +45,23 @@ export class SyncNotificationsUseCase {
         })),
       );
 
-    const channelStatusCache: Record<string, number> = {};
+    const channelStatusCache: Record<string, { otherLastRead: number; myLastRead: number }> = {};
 
     return Promise.all(
       notifications.map(async (m) => {
         if (channelStatusCache[m.channelId] === undefined) {
-          channelStatusCache[m.channelId] =
-            await this.channelRepo.getOtherMembersLastReadSequence(
-              m.channelId,
-              userId,
-            );
+          const otherLastRead = await this.channelRepo.getOtherMembersLastReadSequence(
+            m.channelId,
+            userId,
+          );
+          const myLastRead = await this.channelRepo.getUserLastReadSequence(
+            m.channelId,
+            userId,
+          );
+          channelStatusCache[m.channelId] = { otherLastRead, myLastRead };
         }
 
-        const otherLastRead = channelStatusCache[m.channelId];
+        const { otherLastRead, myLastRead } = channelStatusCache[m.channelId];
 
         return {
           id: m.id,
@@ -72,6 +76,7 @@ export class SyncNotificationsUseCase {
             userId,
             m.sequence,
             otherLastRead,
+            myLastRead,
           ),
           priority: m.priority as NotificationPriority,
           parentNotificationId: m.parentNotificationId,
