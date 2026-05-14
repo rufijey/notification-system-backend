@@ -6,6 +6,7 @@ export interface ChannelDetailsResponse {
   channelId: string;
   title: string;
   memberCount: number;
+  isBanned?: boolean;
 }
 
 @Injectable()
@@ -21,10 +22,15 @@ export class GetChannelDetailsUseCase implements IUseCase<
   async execute(channelId: string): Promise<ChannelDetailsResponse | null> {
     const channel = await this.channelRepository.findById(channelId);
     if (!channel) return null;
+
+    // Check if the channel has an active ban
+    const isBanned = await this.channelRepository.isBanned(channelId);
+
     return {
       channelId: channel.id,
       title: channel.title || 'Channel',
       memberCount: channel.members.length,
+      isBanned,
     };
   }
 }

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { Notification } from '../../domain/notifications/notification.entity';
@@ -11,6 +11,7 @@ import {
 } from '../ports/notifications-sender.port';
 import { IChannelRepository } from '../../domain/channels/channel.repository.interface';
 import { IFailedNotificationsQueue, FAILED_NOTIFICATIONS_QUEUE } from '../ports/failed-notifications-queue.port';
+import { ADMIN_REPOSITORY, IAdminRepository } from '../../../admin/domain/admin.repository.interface';
 
 @Injectable()
 export class ProcessNotificationUseCase {
@@ -21,6 +22,8 @@ export class ProcessNotificationUseCase {
     private readonly sender: INotificationsSender,
     @Inject('CHAT_REPO')
     private readonly channelRepository: IChannelRepository,
+    @Inject(ADMIN_REPOSITORY)
+    private readonly adminRepository: IAdminRepository,
     private readonly eventEmitter: EventEmitter2,
     @Inject(FAILED_NOTIFICATIONS_QUEUE)
     private readonly failedQueue: IFailedNotificationsQueue,
@@ -33,8 +36,15 @@ export class ProcessNotificationUseCase {
     clientNotificationId?: string,
     priority?: NotificationPriority,
     parentNotificationId?: string,
+    attachments?: string[],
     throwOnError = false,
   ): Promise<{ success: boolean; status: 'sent' | 'queued'; notification?: any }> {
+    // Check for active ban
+    const activeBan = await this.adminRepository.getActiveBan(channelId);
+    if (activeBan) {
+      throw new ForbiddenException(`Channel is banned. Reason: ${activeBan.reason}${activeBan.expiresAt ? `. Banned until: ${activeBan.expiresAt.toLocaleString()}` : ''}`);
+    }
+
     try {
       if (clientNotificationId) {
         const existing = await this.repository.findByClientNotificationId(
@@ -58,6 +68,7 @@ export class ProcessNotificationUseCase {
               clientNotificationId: existing.clientNotificationId,
               priority: existing.priority,
               parentNotificationId: existing.parentNotificationId,
+              attachments: existing.attachments,
             },
           };
         }
@@ -77,8 +88,8 @@ export class ProcessNotificationUseCase {
       }
 
       const notification = parentNotificationId
-        ? Notification.createReply(parentNotificationId, channelId, senderId, text, clientNotificationId)
-        : Notification.createRoot(channelId, senderId, text, priority, clientNotificationId);
+        ? Notification.createReply(parentNotificationId, channelId, senderId, text, clientNotificationId, attachments)
+        : Notification.createRoot(channelId, senderId, text, priority, clientNotificationId, attachments);
 
       const savedNotification = await this.repository.save(notification);
 
@@ -93,6 +104,7 @@ export class ProcessNotificationUseCase {
         clientNotificationId: savedNotification.clientNotificationId,
         priority: savedNotification.priority,
         parentNotificationId: savedNotification.parentNotificationId,
+        attachments: savedNotification.attachments,
       });
 
       // Emit asynchronous domain event to handle Web Push delivery in the background
@@ -115,6 +127,7 @@ export class ProcessNotificationUseCase {
           clientNotificationId: savedNotification.clientNotificationId,
           priority: savedNotification.priority,
           parentNotificationId: savedNotification.parentNotificationId,
+          attachments: savedNotification.attachments,
         },
       };
     } catch (error) {
@@ -131,6 +144,7 @@ export class ProcessNotificationUseCase {
         clientNotificationId,
         priority,
         parentNotificationId,
+        attachments,
       });
 
       return { success: true, status: 'queued' };

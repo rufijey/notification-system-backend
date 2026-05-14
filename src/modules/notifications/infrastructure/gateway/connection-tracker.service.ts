@@ -75,4 +75,10 @@ export class ConnectionTrackerService implements INotificationsSender {
       this.server.to(channelId).emit(SocketEvent.CHANNEL_UPDATED, payload);
     }
   }
+
+  sendNotificationDeleted(channelId: string, payload: { notificationId: string; channelId: string }): void {
+    if (this.server) {
+      this.server.to(channelId).emit(SocketEvent.NOTIFICATION_DELETED, payload);
+    }
+  }
 }

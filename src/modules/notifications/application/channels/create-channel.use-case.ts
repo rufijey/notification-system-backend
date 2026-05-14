@@ -25,6 +25,7 @@ export class CreateChannelUseCase {
     memberIds: string[],
     title?: string,
     id?: string,
+    photoUrl?: string,
   ): Promise<Channel> {
     for (const memberId of [creatorId, ...memberIds]) {
       const user = await this.usersRepository.findByUsername(memberId);
@@ -42,6 +43,6 @@ export class CreateChannelUseCase {
       }
     }
 
-    return this.channelRepository.create(creatorId, memberIds, title, id);
+    return this.channelRepository.create(creatorId, memberIds, title, id, photoUrl);
   }
 }

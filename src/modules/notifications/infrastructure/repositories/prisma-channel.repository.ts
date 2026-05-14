@@ -18,35 +18,33 @@ export class PrismaChannelRepository implements IChannelRepository {
     memberIds: string[],
     title?: string,
     id?: string,
+    photoUrl?: string,
   ): Promise<Channel> {
-    const allMemberIds = Array.from(new Set([creatorId, ...memberIds]));
-
     const channel = await this.prisma.channel.create({
       data: {
         id: id || undefined,
         title: title || 'New Channel',
         members: {
-          create: allMemberIds.map((userId) => ({
-            userId,
-            role:
-              userId === creatorId
-                ? PrismaChannelRole.ADMIN
-                : PrismaChannelRole.SUBSCRIBER,
-          })),
+          create: [
+            { userId: creatorId, role: PrismaChannelRole.ADMIN },
+            ...memberIds.map((userId) => ({ userId, role: PrismaChannelRole.SUBSCRIBER })),
+          ],
         },
+        photo: photoUrl ? { create: { url: photoUrl } } : undefined,
       },
       include: {
         members: true,
+        photo: true,
       },
     });
 
-    return ChannelMapper.toDomain(channel);
+    return ChannelMapper.toDomain(channel as any);
   }
 
   async findById(id: string): Promise<Channel | null> {
     const channel = await this.prisma.channel.findUnique({
       where: { id },
-      include: { members: true },
+      include: { members: true, photo: true },
     });
 
     if (!channel) return null;
@@ -74,6 +72,7 @@ export class PrismaChannelRepository implements IChannelRepository {
       },
       include: {
         members: true,
+        photo: true,
         notifications: {
           where: { parentNotificationId: null },
           orderBy: { sequence: 'desc' },
@@ -114,6 +113,7 @@ export class PrismaChannelRepository implements IChannelRepository {
           createdAt: channel.createdAt,
           memberIds: channel.members.map((m) => m.userId),
           title: channel.title ?? undefined,
+          photoUrl: channel.photo?.url ?? undefined,
           lastNotification: lastMsg
             ? {
               text: lastMsg.text,
@@ -203,15 +203,28 @@ export class PrismaChannelRepository implements IChannelRepository {
     userId: string,
     role: ChannelRole = ChannelRole.SUBSCRIBER,
   ): Promise<void> {
+    // Get the latest notification sequence in this channel
+    const lastNotification = await this.prisma.notification.findFirst({
+      where: { channelId, parentNotificationId: null },
+      orderBy: { sequence: 'desc' },
+      select: { sequence: true },
+    });
+
+    const lastSequence = lastNotification?.sequence ?? 0;
+
     await this.prisma.channelMember.upsert({
       where: {
         channelId_userId: { channelId, userId },
       },
-      update: { role: role as PrismaChannelRole },
+      update: { 
+        role: role as PrismaChannelRole,
+        lastReadSequence: lastSequence,
+      },
       create: {
         channelId,
         userId,
         role: role as PrismaChannelRole,
+        lastReadSequence: lastSequence,
       },
     });
   }
@@ -261,6 +274,7 @@ export class PrismaChannelRepository implements IChannelRepository {
           take: limit,
           include: {
             members: true,
+            photo: true,
           },
         });
 
@@ -280,7 +294,7 @@ export class PrismaChannelRepository implements IChannelRepository {
 
         const channels = await this.prisma.channel.findMany({
           where: { id: { in: channelIds } },
-          include: { members: true },
+          include: { members: true, photo: true },
         });
 
         return channels.map(ChannelMapper.toDomain);
@@ -292,6 +306,7 @@ export class PrismaChannelRepository implements IChannelRepository {
           take: limit,
           include: {
             members: true,
+            photo: true,
           },
         });
 
@@ -307,7 +322,13 @@ export class PrismaChannelRepository implements IChannelRepository {
     const members = await this.prisma.channelMember.findMany({
       where: { channelId },
       include: {
-        user: { select: { username: true, fullName: true } },
+        user: { 
+          select: { 
+            username: true, 
+            fullName: true,
+            avatar: { select: { url: true } }
+          } 
+        },
       },
       orderBy: { joinedAt: 'asc' },
     });
@@ -316,18 +337,48 @@ export class PrismaChannelRepository implements IChannelRepository {
       userId: m.userId,
       username: m.user.username,
       fullName: m.user.fullName,
+      avatarUrl: m.user.avatar?.url,
       role: m.role as ChannelRole,
       lastReadSequence: m.lastReadSequence,
       joinedAt: m.joinedAt,
     }));
   }
 
-  async updateTitle(channelId: string, title: string): Promise<Channel> {
+  async updateDetails(channelId: string, title?: string, photoUrl?: string): Promise<Channel> {
+    const data: any = {};
+    if (title !== undefined) data.title = title;
+    if (photoUrl !== undefined) {
+      if (photoUrl) {
+        data.photo = {
+          upsert: {
+            create: { url: photoUrl },
+            update: { url: photoUrl }
+          }
+        };
+      } else {
+        data.photo = { delete: true };
+      }
+    }
+
     const channel = await this.prisma.channel.update({
       where: { id: channelId },
-      data: { title },
-      include: { members: true },
+      data,
+      include: { members: true, photo: true },
     });
     return ChannelMapper.toDomain(channel);
+  }
+
+  async isBanned(channelId: string): Promise<boolean> {
+    const count = await this.prisma.channelBan.count({
+      where: {
+        channelId,
+        isActive: true,
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: new Date() } },
+        ],
+      },
+    });
+    return count > 0;
   }
 }

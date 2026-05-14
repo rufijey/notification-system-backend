@@ -26,7 +26,13 @@ export class WsConnectionService {
     client.data.user = payload;
     const userId = payload.sub;
 
+    console.log(`[WS] Authenticated user ${userId} with role ${payload.role}`);
+
     await client.join(userId);
+
+    if (payload.role === 'GLOBAL_ADMIN') {
+      await client.join('admin');
+    }
 
     const channelIds = await this.channelRepository.findUserChannelIds(userId);
     for (const channelId of channelIds) {

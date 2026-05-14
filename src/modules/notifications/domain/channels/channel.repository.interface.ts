@@ -3,6 +3,7 @@ import { Channel, ChannelRole } from './channel.entity';
 export interface ChannelWithLastNotification {
   id: string;
   title?: string;
+  photoUrl?: string;
   role?: string;
   createdAt: Date;
   memberIds: string[];
@@ -22,6 +23,7 @@ export interface ChannelMemberDetails {
   userId: string;
   username: string;
   fullName: string | null;
+  avatarUrl?: string;
   role: ChannelRole;
   lastReadSequence: number;
   joinedAt: Date;
@@ -33,6 +35,7 @@ export interface IChannelRepository {
     memberIds: string[],
     title?: string,
     id?: string,
+    photoUrl?: string,
   ): Promise<Channel>;
   findById(id: string): Promise<Channel | null>;
   findUserChannelIds(userId: string): Promise<string[]>;
@@ -62,5 +65,6 @@ export interface IChannelRepository {
     isId: boolean,
   ): Promise<Channel[]>;
   getMembers(channelId: string): Promise<ChannelMemberDetails[]>;
-  updateTitle(channelId: string, title: string): Promise<Channel>;
+  updateDetails(channelId: string, title?: string, photoUrl?: string): Promise<Channel>;
+  isBanned(channelId: string): Promise<boolean>;
 }

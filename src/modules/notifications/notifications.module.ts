@@ -18,6 +18,7 @@ import { RenameChannelUseCase } from './application/channels/rename-channel.use-
 import { GetGlobalNotificationsUseCase } from './application/notifications/get-global-notifications.use-case';
 import { GetChannelDetailsUseCase } from './application/channels/get-channel-details.use-case';
 import { GetMembersUseCase } from './application/channels/get-members.use-case';
+import { DeleteNotificationUseCase } from './application/notifications/delete-notification.use-case';
 import { NotificationsGateway } from './presentation/notifications.gateway';
 import { NotificationsController } from './presentation/notifications.controller';
 import { BullModule } from '@nestjs/bullmq';
@@ -25,6 +26,7 @@ import { FailedNotificationsProcessor } from './infrastructure/redis/failed-noti
 import { ConnectionTrackerService } from './infrastructure/gateway/connection-tracker.service';
 import { MESSENGER_SENDER } from './application/ports/notifications-sender.port';
 import { UsersModule } from '../users/users.module';
+import { AdminModule } from '../admin/admin.module';
 import { WsAtGuard } from './presentation/guards/ws-at.guard';
 import { PrismaChannelRepository } from './infrastructure/repositories/prisma-channel.repository';
 import { PrismaNotificationRepository } from './infrastructure/repositories/prisma-notification.repository';
@@ -40,6 +42,7 @@ import { RedisFailedNotificationsQueue } from './infrastructure/redis/redis-fail
 @Module({
   imports: [
     UsersModule,
+    AdminModule,
     EventEmitterModule.forRoot(),
     BullModule.registerQueue({ name: 'failed_notifications' }),
   ],
@@ -62,6 +65,7 @@ import { RedisFailedNotificationsQueue } from './infrastructure/redis/redis-fail
     GetGlobalNotificationsUseCase,
     GetChannelDetailsUseCase,
     GetMembersUseCase,
+    DeleteNotificationUseCase,
     SubscribePushUseCase,
     NotificationsGateway,
     ConnectionTrackerService,

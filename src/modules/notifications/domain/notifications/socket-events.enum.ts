@@ -8,4 +8,9 @@ export enum SocketEvent {
   SYNC_NOTIFICATIONS = 'sync_notifications',
   CHANNEL_JOINED = 'channel_joined',
   CHANNEL_UPDATED = 'channel_updated',
+  NOTIFICATION_DELETED = 'notification_deleted',
+  ADMIN_REPORT_CREATED = 'admin.report.created',
+  ADMIN_REPORT_DISMISSED = 'admin.report.dismissed',
+  ADMIN_CHANNEL_BANNED = 'admin.channel.banned',
+  ADMIN_CHANNEL_UNBANNED = 'admin.channel.unbanned',
 }

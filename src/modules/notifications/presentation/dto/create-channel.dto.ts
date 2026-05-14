@@ -12,4 +12,8 @@ export class CreateChannelDto {
   @IsString()
   @IsOptional()
   id?: string;
+
+  @IsString()
+  @IsOptional()
+  photoUrl?: string;
 }

@@ -28,6 +28,7 @@ import { JoinChannelUseCase } from '../application/channels/join-channel.use-cas
 import { GetGlobalNotificationsUseCase } from '../application/notifications/get-global-notifications.use-case';
 import { GetChannelDetailsUseCase } from '../application/channels/get-channel-details.use-case';
 import { GetMembersUseCase } from '../application/channels/get-members.use-case';
+import { DeleteNotificationUseCase } from '../application/notifications/delete-notification.use-case';
 import { ChannelRole } from '../domain/channels/channel.entity';
 import { AtGuard } from '../../users/presentation/guards/at.guard';
 import {
@@ -62,6 +63,7 @@ export class NotificationsController {
     private readonly getGlobalNotificationsUseCase: GetGlobalNotificationsUseCase,
     private readonly getChannelDetailsUseCase: GetChannelDetailsUseCase,
     private readonly getMembersUseCase: GetMembersUseCase,
+    private readonly deleteNotificationUseCase: DeleteNotificationUseCase,
     @Inject(MESSENGER_SENDER)
     private readonly sender: INotificationsSender,
     private readonly webPushService: WebPushService,
@@ -79,6 +81,7 @@ export class NotificationsController {
       dto.memberIds,
       dto.title,
       dto.id,
+      dto.photoUrl,
     );
 
     const response = {
@@ -109,6 +112,7 @@ export class NotificationsController {
       dto.clientNotificationId,
       dto.priority,
       dto.parentNotificationId,
+      dto.attachments,
     );
   }
 
@@ -265,17 +269,20 @@ export class NotificationsController {
   async renameChannel(
     @Req() req: AuthenticatedRequest,
     @Param('channelId') channelId: string,
-    @Body('title') title: string,
+    @Body('title') title?: string,
+    @Body('photoUrl') photoUrl?: string,
   ) {
     await this.renameChannelUseCase.execute({
       channelId,
       adminId: req.user.sub,
       title,
+      photoUrl,
     });
 
     this.sender.sendChannelUpdated(channelId, {
       channelId,
       title,
+      photoUrl,
     });
 
     return { success: true };
@@ -287,5 +294,16 @@ export class NotificationsController {
     @Param('channelId') channelId: string,
   ) {
     return this.getMembersUseCase.execute(channelId);
+  }
+
+  @Delete(':id')
+  async deleteNotification(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    return this.deleteNotificationUseCase.execute({
+      notificationId: id,
+      userId: req.user.sub,
+    });
   }
 }

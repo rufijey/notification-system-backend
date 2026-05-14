@@ -7,6 +7,7 @@ export interface QueuedNotificationPayload {
   clientNotificationId?: string;
   priority?: NotificationPriority;
   parentNotificationId?: string;
+  attachments?: string[];
 }
 
 export interface IFailedNotificationsQueue {

@@ -11,6 +11,8 @@ import {
   MESSENGER_SENDER,
 } from '../ports/notifications-sender.port';
 
+import { BanCheckerService } from '../../../admin/infrastructure/ban-checker.service';
+
 interface JoinChannelInput {
   userId: string;
   channelId: string;
@@ -23,9 +25,12 @@ export class JoinChannelUseCase implements IUseCase<JoinChannelInput, void> {
     private readonly channelRepository: IChannelRepository,
     @Inject(MESSENGER_SENDER)
     private readonly sender: INotificationsSender,
+    private readonly banChecker: BanCheckerService,
   ) { }
 
   async execute(input: JoinChannelInput): Promise<void> {
+    await this.banChecker.checkBan(input.channelId);
+
     const channel = await this.channelRepository.findById(input.channelId);
     if (!channel) {
       throw new NotFoundException('Channel not found');
@@ -40,6 +45,7 @@ export class JoinChannelUseCase implements IUseCase<JoinChannelInput, void> {
     }
 
     await this.channelRepository.addMember(input.channelId, input.userId);
+    const lastReadSequence = await this.channelRepository.getUserLastReadSequence(input.channelId, input.userId);
 
     const response = {
       channelId: channel.id,
@@ -50,7 +56,7 @@ export class JoinChannelUseCase implements IUseCase<JoinChannelInput, void> {
       ],
       createdAt: channel.createdAt,
       unreadCount: 0,
-      lastReadSequence: 0,
+      lastReadSequence,
       title: channel.title,
     };
 

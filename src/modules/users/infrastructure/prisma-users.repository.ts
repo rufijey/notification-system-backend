@@ -11,13 +11,13 @@ export class PrismaUsersRepository implements IUsersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findByUsername(username: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({ where: { username } });
+    const user = await this.prisma.user.findUnique({ where: { username }, include: { avatar: true } });
     if (!user) return null;
     return UserMapper.toDomain(user);
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email }, include: { avatar: true } });
     if (!user) return null;
     return UserMapper.toDomain(user);
   }
@@ -36,9 +36,18 @@ export class PrismaUsersRepository implements IUsersRepository {
         fullName: data.fullName,
         email: data.email,
         passwordHash: data.passwordHash,
+        role: data.role,
       },
       create: data,
     });
+
+    if (user.avatarUrl) {
+      await this.prisma.userAvatar.upsert({
+        where: { userId: user.username },
+        update: { url: user.avatarUrl },
+        create: { url: user.avatarUrl, userId: user.username },
+      });
+    }
   }
 
   async addRefreshToken(token: RefreshToken): Promise<void> {

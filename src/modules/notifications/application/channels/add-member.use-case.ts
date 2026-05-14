@@ -10,6 +10,7 @@ import {
   USERS_REPOSITORY,
 } from '../../../users/domain/users.repository.interface';
 import { Channel } from '../../domain/channels/channel.entity';
+import { BanCheckerService } from '../../../admin/infrastructure/ban-checker.service';
 
 @Injectable()
 export class AddMemberUseCase {
@@ -18,9 +19,12 @@ export class AddMemberUseCase {
     private readonly channelRepository: IChannelRepository,
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: IUsersRepository,
+    private readonly banChecker: BanCheckerService,
   ) {}
 
   async execute(channelId: string, memberId: string): Promise<Channel> {
+    await this.banChecker.checkBan(channelId);
+
     const channel = await this.channelRepository.findById(channelId);
     if (!channel) {
       throw new NotFoundException('Channel not found');

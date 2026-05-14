@@ -3,7 +3,7 @@ import { Notification } from '../../domain/notifications/notification.entity';
 import { NotificationPriority } from '../../domain/notifications/notification-priority.enum';
 
 export class NotificationMapper {
-  static toDomain(data: PrismaNotification): Notification {
+  static toDomain(data: PrismaNotification & { attachments?: { url: string }[] }): Notification {
     return new Notification(
       data.id,
       data.channelId,
@@ -14,6 +14,7 @@ export class NotificationMapper {
       data.clientNotificationId ?? undefined,
       data.priority as unknown as NotificationPriority,
       data.parentNotificationId ?? undefined,
+      data.attachments?.map(a => a.url),
     );
   }
 

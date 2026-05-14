@@ -1,6 +1,5 @@
 import {
   OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -18,6 +17,8 @@ import { WsAtGuard } from './guards/ws-at.guard';
 import { SocketEvent } from '../domain/notifications/socket-events.enum';
 import { SyncNotificationsUseCase } from '../application/notifications/sync-notifications.use-case';
 import { WsConnectionService } from '../infrastructure/gateway/ws-connection.service';
+
+import { OnEvent } from '@nestjs/event-emitter';
 
 @WebSocketGateway({
   path: '/api/socket.io/',
@@ -51,6 +52,36 @@ export class NotificationsGateway
     } catch (e) {
       client.disconnect();
     }
+  }
+
+  @OnEvent(SocketEvent.ADMIN_REPORT_CREATED)
+  handleReportCreated(payload: any) {
+    console.log(`[WS] Broadcasting admin event: ${SocketEvent.ADMIN_REPORT_CREATED}`, payload);
+    this.server.to('admin').emit(SocketEvent.ADMIN_REPORT_CREATED, payload);
+  }
+
+  @OnEvent(SocketEvent.ADMIN_REPORT_DISMISSED)
+  handleReportDismissed(payload: any) {
+    console.log(`[WS] Broadcasting admin event: ${SocketEvent.ADMIN_REPORT_DISMISSED}`, payload);
+    this.server.to('admin').emit(SocketEvent.ADMIN_REPORT_DISMISSED, payload);
+  }
+
+  @OnEvent(SocketEvent.ADMIN_CHANNEL_BANNED)
+  handleChannelBanned(payload: any) {
+    console.log(`[WS] Broadcasting admin event: ${SocketEvent.ADMIN_CHANNEL_BANNED}`, payload);
+    // Emit to admin room
+    this.server.to('admin').emit(SocketEvent.ADMIN_CHANNEL_BANNED, payload);
+    // Broadcast globally so non-members currently viewing the channel also get updated
+    this.server.emit(SocketEvent.ADMIN_CHANNEL_BANNED, payload);
+  }
+
+  @OnEvent(SocketEvent.ADMIN_CHANNEL_UNBANNED)
+  handleChannelUnbanned(payload: any) {
+    console.log(`[WS] Broadcasting admin event: ${SocketEvent.ADMIN_CHANNEL_UNBANNED}`, payload);
+    // Emit to admin room
+    this.server.to('admin').emit(SocketEvent.ADMIN_CHANNEL_UNBANNED, payload);
+    // Broadcast globally so non-members currently viewing the channel also get updated
+    this.server.emit(SocketEvent.ADMIN_CHANNEL_UNBANNED, payload);
   }
 
   @UseGuards(WsAtGuard)

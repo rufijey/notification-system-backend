@@ -23,7 +23,14 @@ interface RefreshTokensInput {
 @Injectable()
 export class RefreshTokensUseCase implements IUseCase<
   RefreshTokensInput,
-  Promise<{ accessToken: string; refreshToken: string; userId: string }>
+  Promise<{ 
+    accessToken: string; 
+    refreshToken: string; 
+    userId: string; 
+    role: string; 
+    fullName: string; 
+    avatarUrl?: string 
+  }>
 > {
   constructor(
     @Inject(USERS_REPOSITORY)
@@ -34,7 +41,14 @@ export class RefreshTokensUseCase implements IUseCase<
 
   async execute(
     input: RefreshTokensInput,
-  ): Promise<{ accessToken: string; refreshToken: string; userId: string }> {
+  ): Promise<{ 
+    accessToken: string; 
+    refreshToken: string; 
+    userId: string; 
+    role: string; 
+    fullName: string; 
+    avatarUrl?: string 
+  }> {
     const { userId, refreshToken, userAgent, ip } = input;
     const user = await this.usersRepository.findByUsername(userId);
     if (!user) {
@@ -63,6 +77,7 @@ export class RefreshTokensUseCase implements IUseCase<
     const newTokens = await this.tokenService.generateTokens({
       sub: user.username,
       email: user.email,
+      role: user.role,
       tokenId: newTokenId,
     });
 
@@ -85,6 +100,12 @@ export class RefreshTokensUseCase implements IUseCase<
 
     await this.usersRepository.addRefreshToken(refreshTokenEntity);
 
-    return { ...newTokens, userId };
+    return { 
+      ...newTokens, 
+      userId, 
+      role: user.role, 
+      fullName: user.fullName, 
+      avatarUrl: user.avatarUrl 
+    };
   }
 }

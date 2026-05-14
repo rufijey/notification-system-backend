@@ -27,6 +27,11 @@ export interface INotificationsSender {
       userId?: string;
       role?: string;
       title?: string;
+      photoUrl?: string;
     },
+  ): void;
+  sendNotificationDeleted(
+    channelId: string,
+    payload: { notificationId: string; channelId: string },
   ): void;
 }

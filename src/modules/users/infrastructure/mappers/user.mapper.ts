@@ -1,15 +1,17 @@
-import { User as PrismaUser } from '@prisma/client';
-import { User } from '../../domain/user.entity';
+import { User as PrismaUser, UserRole as PrismaUserRole } from '@prisma/client';
+import { User, UserRole } from '../../domain/user.entity';
 
 export class UserMapper {
-  static toDomain(user: PrismaUser): User {
+  static toDomain(user: PrismaUser & { avatar?: { url: string } | null }): User {
     return new User(
       user.username,
       user.fullName,
       user.email,
       user.passwordHash,
+      user.role as unknown as UserRole,
       user.createdAt,
       user.updatedAt,
+      user.avatar?.url,
     );
   }
 
@@ -19,6 +21,7 @@ export class UserMapper {
       fullName: user.fullName,
       email: user.email,
       passwordHash: user.passwordHash,
+      role: user.role as unknown as PrismaUserRole,
     };
   }
 }

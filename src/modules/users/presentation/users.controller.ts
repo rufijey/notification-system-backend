@@ -9,6 +9,8 @@ import {
   HttpStatus,
   Inject,
   Patch,
+  Get,
+  Param,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { LoginUseCase } from '../application/login.use-case';
@@ -16,6 +18,7 @@ import { RegisterUseCase } from '../application/register.use-case';
 import { RefreshTokensUseCase } from '../application/refresh-tokens.use-case';
 import { LogoutUseCase } from '../application/logout.use-case';
 import { UpdateProfileUseCase } from '../application/update-profile.use-case';
+import { GetProfileUseCase } from '../application/get-profile.use-case';
 import {
   IUsersRepository,
   USERS_REPOSITORY,
@@ -49,6 +52,7 @@ export class UsersController {
     private readonly refreshTokensUseCase: RefreshTokensUseCase,
     private readonly logoutUseCase: LogoutUseCase,
     private readonly updateProfileUseCase: UpdateProfileUseCase,
+    private readonly getProfileUseCase: GetProfileUseCase,
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: IUsersRepository,
   ) {}
@@ -71,6 +75,8 @@ export class UsersController {
       accessToken: result.accessToken,
       userId: result.userId,
       fullName: user?.fullName ?? null,
+      avatarUrl: user?.avatarUrl ?? null,
+      role: user?.role ?? null,
     };
   }
 
@@ -92,6 +98,8 @@ export class UsersController {
       accessToken: result.accessToken,
       userId: result.userId,
       fullName: user?.fullName ?? null,
+      avatarUrl: user?.avatarUrl ?? null,
+      role: user?.role ?? null,
     };
   }
 
@@ -118,6 +126,8 @@ export class UsersController {
       accessToken: result.accessToken,
       userId: result.userId,
       fullName: user?.fullName ?? null,
+      avatarUrl: user?.avatarUrl ?? null,
+      role: user?.role ?? null,
     };
   }
 
@@ -140,13 +150,21 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async updateProfile(
     @Req() req: RequestWithUser,
-    @Body() body: { fullName: string },
+    @Body() body: { fullName?: string; avatarUrl?: string },
   ) {
     const username = req.user.sub;
     return this.updateProfileUseCase.execute({
       username,
       fullName: body.fullName,
+      avatarUrl: body.avatarUrl,
     });
+  }
+
+  @Get(':username')
+  @UseGuards(AtGuard)
+  @HttpCode(HttpStatus.OK)
+  async getProfile(@Param('username') username: string) {
+    return this.getProfileUseCase.execute(username);
   }
 
   private setRefreshTokenCookie(res: Response, refreshToken: string) {

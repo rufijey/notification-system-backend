@@ -1,9 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
 import { INotificationRepository } from '../../domain/notifications/notification.repository.interface';
 import { IChannelRepository } from '../../domain/channels/channel.repository.interface';
 import { Notification } from '../../domain/notifications/notification.entity';
 import { DeliveryStatus } from '../../domain/notifications/delivery-status.enum';
 import { NotificationPriority } from '../../domain/notifications/notification-priority.enum';
+import { ADMIN_REPOSITORY, IAdminRepository } from '../../../admin/domain/admin.repository.interface';
 
 const DEFAULT_PAGE_SIZE = 30;
 
@@ -18,6 +19,7 @@ export interface NotificationWithStatus {
   clientNotificationId?: string;
   priority: NotificationPriority;
   parentNotificationId?: string;
+  attachments?: string[];
 }
 
 export interface GetChannelHistoryResult {
@@ -32,6 +34,8 @@ export class GetChannelHistoryUseCase {
     private readonly notificationRepository: INotificationRepository,
     @Inject('CHAT_REPO')
     private readonly channelRepository: IChannelRepository,
+    @Inject(ADMIN_REPOSITORY)
+    private readonly adminRepository: IAdminRepository,
   ) {}
 
   async execute(
@@ -41,6 +45,12 @@ export class GetChannelHistoryUseCase {
     beforeSequence?: number,
     query?: string,
   ): Promise<GetChannelHistoryResult> {
+    // Check for active ban
+    const activeBan = await this.adminRepository.getActiveBan(channelId);
+    if (activeBan) {
+      throw new ForbiddenException(`Channel is banned. Reason: ${activeBan.reason}${activeBan.expiresAt ? `. Banned until: ${activeBan.expiresAt.toLocaleString()}` : ''}`);
+    }
+
     const notifications =
       await this.notificationRepository.findByChannelIdPaginated(
         channelId,
@@ -82,6 +92,7 @@ export class GetChannelHistoryUseCase {
         ),
         priority: m.priority as NotificationPriority,
         parentNotificationId: m.parentNotificationId,
+        attachments: m.attachments,
       })),
       hasMore,
     };

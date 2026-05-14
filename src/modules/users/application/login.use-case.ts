@@ -23,7 +23,14 @@ interface LoginInput {
 @Injectable()
 export class LoginUseCase implements IUseCase<
   LoginInput,
-  Promise<{ accessToken: string; refreshToken: string; userId: string }>
+  Promise<{ 
+    accessToken: string; 
+    refreshToken: string; 
+    userId: string; 
+    role: string; 
+    fullName: string; 
+    avatarUrl?: string 
+  }>
 > {
   constructor(
     @Inject(USERS_REPOSITORY)
@@ -34,7 +41,14 @@ export class LoginUseCase implements IUseCase<
 
   async execute(
     input: LoginInput,
-  ): Promise<{ accessToken: string; refreshToken: string; userId: string }> {
+  ): Promise<{ 
+    accessToken: string; 
+    refreshToken: string; 
+    userId: string; 
+    role: string; 
+    fullName: string; 
+    avatarUrl?: string 
+  }> {
     const { dto, userAgent, ip } = input;
     const user = await this.usersRepository.findByEmail(dto.email);
     if (!user) {
@@ -53,6 +67,7 @@ export class LoginUseCase implements IUseCase<
     const tokens = await this.tokenService.generateTokens({
       sub: user.username,
       email: user.email,
+      role: user.role,
       tokenId,
     });
 
@@ -75,6 +90,12 @@ export class LoginUseCase implements IUseCase<
 
     await this.usersRepository.addRefreshToken(refreshTokenEntity);
 
-    return { ...tokens, userId: user.username };
+    return { 
+      ...tokens, 
+      userId: user.username, 
+      role: user.role, 
+      fullName: user.fullName, 
+      avatarUrl: user.avatarUrl 
+    };
   }
 }

@@ -21,4 +21,8 @@ export class SendNotificationDto {
   @IsString()
   @IsOptional()
   parentNotificationId?: string;
+
+  @IsOptional()
+  @IsString({ each: true })
+  attachments?: string[];
 }

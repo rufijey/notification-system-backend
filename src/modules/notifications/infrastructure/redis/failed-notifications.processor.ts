@@ -48,6 +48,7 @@ export class FailedNotificationsProcessor extends WorkerHost implements OnModule
       payload.clientNotificationId,
       payload.priority,
       payload.parentNotificationId,
+      payload.attachments,
       true, // throwOnError = true
     );
 

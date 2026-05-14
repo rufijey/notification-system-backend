@@ -10,8 +10,15 @@ export class PrismaNotificationRepository implements INotificationRepository {
   constructor(private readonly prisma: PrismaService) { }
 
   async save(notification: Notification): Promise<Notification> {
+    const persistenceData = NotificationMapper.toPersistence(notification);
     const data = await this.prisma.notification.create({
-      data: NotificationMapper.toPersistence(notification),
+      data: {
+        ...persistenceData,
+        attachments: {
+          create: notification.attachments?.map(url => ({ url })) || [],
+        }
+      },
+      include: { attachments: true }
     });
 
     return NotificationMapper.toDomain(data);
@@ -22,6 +29,7 @@ export class PrismaNotificationRepository implements INotificationRepository {
   ): Promise<Notification | null> {
     const data = await this.prisma.notification.findUnique({
       where: { clientNotificationId },
+      include: { attachments: true }
     });
 
     if (!data) return null;
@@ -37,6 +45,7 @@ export class PrismaNotificationRepository implements INotificationRepository {
         channelId,
         sequence: { gt: lastSequence },
       },
+      include: { attachments: true },
       orderBy: { sequence: 'asc' },
     });
 
@@ -57,6 +66,7 @@ export class PrismaNotificationRepository implements INotificationRepository {
       where: {
         OR: conditions,
       },
+      include: { attachments: true },
       orderBy: { sequence: 'asc' },
     });
 
@@ -66,6 +76,7 @@ export class PrismaNotificationRepository implements INotificationRepository {
   async findByChannelId(channelId: string): Promise<Notification[]> {
     const notifications = await this.prisma.notification.findMany({
       where: { channelId },
+      include: { attachments: true },
       orderBy: { createdAt: 'asc' },
     });
 
@@ -91,23 +102,42 @@ export class PrismaNotificationRepository implements INotificationRepository {
 
     const whereClause = Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`;
 
-    const rawNotifications = await this.prisma.$queryRaw<PrismaNotification[]>`
-      SELECT * FROM "Notification"
+    const rawNotifications = await this.prisma.$queryRaw<(PrismaNotification & { attachments_json: any })[]>`
+      SELECT 
+        n.*,
+        (
+          SELECT json_agg(json_build_object('url', url))
+          FROM "NotificationAttachment"
+          WHERE "notificationId" = n.id
+        ) as "attachments_json"
+      FROM "Notification" n
       ${whereClause}
-      ORDER BY "sequence" DESC
+      ORDER BY n."sequence" DESC
       LIMIT ${limit}
     `;
 
-    return rawNotifications.reverse().map(NotificationMapper.toDomain);
+    const reversed = rawNotifications.reverse();
+    
+    return reversed.map(n => NotificationMapper.toDomain({
+      ...n,
+      attachments: n.attachments_json || []
+    } as any));
   }
 
   async findById(id: string): Promise<Notification | null> {
     const data = await this.prisma.notification.findUnique({
       where: { id },
+      include: { attachments: true }
     });
 
     if (!data) return null;
     return NotificationMapper.toDomain(data);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.notification.delete({
+      where: { id }
+    });
   }
 
   async getLatestSequence(channelId: string): Promise<number> {
@@ -147,9 +177,15 @@ export class PrismaNotificationRepository implements INotificationRepository {
     const notifications = await this.prisma.$queryRaw<GlobalNotificationWithRelations[]>`
       SELECT 
         n.*,
+        (
+          SELECT json_agg(json_build_object('url', url))
+          FROM "NotificationAttachment"
+          WHERE "notificationId" = n.id
+        ) as "attachments",
         json_build_object(
           'id', c.id,
           'title', c.title,
+          'photoUrl', cp.url,
           'members', json_build_array(
             json_build_object('lastReadSequence', cm."lastReadSequence")
           )
@@ -160,6 +196,7 @@ export class PrismaNotificationRepository implements INotificationRepository {
         ) as "sender"
       FROM "Notification" n
       INNER JOIN "Channel" c ON n."channelId" = c.id
+      LEFT JOIN "ChannelPhoto" cp ON c.id = cp."channelId"
       INNER JOIN "ChannelMember" cm ON c.id = cm."channelId" AND cm."userId" = ${userId}
       INNER JOIN "User" u ON n."senderId" = u.username
       ${whereClause}

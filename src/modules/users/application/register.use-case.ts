@@ -12,7 +12,7 @@ import {
 } from '../domain/token-service.interface';
 import { IUseCase } from '../../../shared/application/use-case.interface';
 import { RegisterDto } from '../presentation/dto/register.dto';
-import { User } from '../domain/user.entity';
+import { User, UserRole } from '../domain/user.entity';
 import { RefreshToken } from '../domain/refresh-token.entity';
 
 interface RegisterInput {
@@ -59,6 +59,7 @@ export class RegisterUseCase implements IUseCase<
       dto.fullName,
       dto.email,
       passwordHash,
+      UserRole.USER,
       new Date(),
       new Date(),
     );
@@ -69,6 +70,7 @@ export class RegisterUseCase implements IUseCase<
     const tokens = await this.tokenService.generateTokens({
       sub: dto.username,
       email: dto.email,
+      role: newUser.role,
       tokenId,
     });
 

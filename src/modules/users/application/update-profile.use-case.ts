@@ -4,7 +4,8 @@ import { User } from '../domain/user.entity';
 
 interface UpdateProfileInput {
   username: string;
-  fullName: string;
+  fullName?: string;
+  avatarUrl?: string;
 }
 
 @Injectable()
@@ -14,7 +15,7 @@ export class UpdateProfileUseCase {
     private readonly usersRepository: IUsersRepository,
   ) {}
 
-  async execute(input: UpdateProfileInput): Promise<{ username: string; fullName: string }> {
+  async execute(input: UpdateProfileInput): Promise<{ username: string; fullName: string; avatarUrl?: string }> {
     const user = await this.usersRepository.findByUsername(input.username);
     if (!user) {
       throw new NotFoundException(`User with username ${input.username} not found`);
@@ -22,11 +23,12 @@ export class UpdateProfileUseCase {
 
     const updatedUser = new User(
       user.username,
-      input.fullName,
+      input.fullName ?? user.fullName,
       user.email,
       user.passwordHash,
       user.createdAt,
       new Date(),
+      input.avatarUrl ?? user.avatarUrl
     );
 
     await this.usersRepository.save(updatedUser);
@@ -34,6 +36,7 @@ export class UpdateProfileUseCase {
     return {
       username: updatedUser.username,
       fullName: updatedUser.fullName,
+      avatarUrl: updatedUser.avatarUrl,
     };
   }
 }

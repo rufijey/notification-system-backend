@@ -10,6 +10,7 @@ export interface GlobalNotificationWithRelations {
   clientNotificationId: string | null;
   priority: 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE';
   parentNotificationId: string | null;
+  attachments?: { url: string }[];
   channel: {
     id: string;
     title: string | null;
@@ -43,6 +44,7 @@ export interface INotificationRepository {
     query?: string,
   ): Promise<Notification[]>;
   findById(id: string): Promise<Notification | null>;
+  delete(id: string): Promise<void>;
   getLatestSequence(channelId: string): Promise<number>;
   getGlobalNotifications(
     userId: string,

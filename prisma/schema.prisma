@@ -8,6 +8,11 @@ datasource db {
   extensions = [pg_trgm]
 }
 
+enum UserRole {
+  USER
+  GLOBAL_ADMIN
+}
+
 enum DeliveryStatus {
   PENDING
   DELIVERED
@@ -32,12 +37,24 @@ model User {
   fullName          String
   email             String             @unique
   passwordHash      String
+  role              UserRole           @default(USER)
   refreshTokens     RefreshToken[]
   notifications     Notification[]     @relation("SenderNotifications")
   channelMembers    ChannelMember[]
   pushSubscriptions PushSubscription[]
+  avatar            UserAvatar?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  reports           ChannelReport[]    @relation("UserReports")
+  issuedBans        ChannelBan[]       @relation("AdminBans")
+}
+
+model UserAvatar {
+  id        String   @id @default(uuid())
+  url       String
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [username], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
 
 model Channel {
@@ -45,10 +62,46 @@ model Channel {
   title         String
   members       ChannelMember[]
   notifications Notification[]
+  photo         ChannelPhoto?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+  bans          ChannelBan[]
+  reports       ChannelReport[]
 
   @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)
+}
+
+model ChannelBan {
+  id        String   @id @default(uuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  adminId   String
+  admin     User     @relation("AdminBans", fields: [adminId], references: [username])
+  reason    String
+  expiresAt DateTime?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([channelId, isActive])
+}
+
+model ChannelReport {
+  id        String   @id @default(uuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User     @relation("UserReports", fields: [reporterId], references: [username])
+  reason     String
+  createdAt  DateTime @default(now())
+}
+
+model ChannelPhoto {
+  id        String   @id @default(uuid())
+  url       String
+  channelId String   @unique
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
 
 model RefreshToken {
@@ -75,22 +128,31 @@ model ChannelMember {
 }
 
 model Notification {
-  id                   String               @id @default(uuid())
-  clientNotificationId String?              @unique
-  sequence             Int                  @unique @default(autoincrement())
+  id                   String                   @id @default(uuid())
+  clientNotificationId String?                  @unique
+  sequence             Int                      @unique @default(autoincrement())
   channelId            String
-  channel              Channel              @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channel              Channel                  @relation(fields: [channelId], references: [id], onDelete: Cascade)
   senderId             String
-  sender               User                 @relation("SenderNotifications", fields: [senderId], references: [username])
+  sender               User                     @relation("SenderNotifications", fields: [senderId], references: [username])
   text                 String
-  priority             NotificationPriority @default(MEDIUM)
+  priority             NotificationPriority     @default(MEDIUM)
   parentNotificationId String?
-  parentNotification   Notification?        @relation("Thread", fields: [parentNotificationId], references: [id], onDelete: SetNull)
-  replies              Notification[]       @relation("Thread")
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
+  parentNotification   Notification?            @relation("Thread", fields: [parentNotificationId], references: [id], onDelete: SetNull)
+  replies              Notification[]           @relation("Thread")
+  attachments          NotificationAttachment[] @relation("NotificationToAttachment")
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
 
   @@index([text(ops: raw("gin_trgm_ops"))], type: Gin)
+}
+
+model NotificationAttachment {
+  id             String       @id @default(uuid())
+  url            String
+  notificationId String
+  notification   Notification @relation("NotificationToAttachment", fields: [notificationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
 }
 
 model PushSubscription {

@@ -15,5 +15,6 @@ export class Channel {
     public readonly createdAt: Date,
     public readonly members: ChannelMemberEntity[] = [],
     public readonly title?: string,
+    public readonly photoUrl?: string,
   ) {}
 }

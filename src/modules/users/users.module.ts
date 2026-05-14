@@ -12,6 +12,7 @@ import { LoginUseCase } from './application/login.use-case';
 import { RefreshTokensUseCase } from './application/refresh-tokens.use-case';
 import { LogoutUseCase } from './application/logout.use-case';
 import { UpdateProfileUseCase } from './application/update-profile.use-case';
+import { GetProfileUseCase } from './application/get-profile.use-case';
 import { UsersController } from './presentation/users.controller';
 import { AtStrategy } from './presentation/strategies/at.strategy';
 import { RtStrategy } from './presentation/strategies/rt.strategy';
@@ -34,6 +35,7 @@ import { RtStrategy } from './presentation/strategies/rt.strategy';
     RefreshTokensUseCase,
     LogoutUseCase,
     UpdateProfileUseCase,
+    GetProfileUseCase,
     AtStrategy,
     RtStrategy,
   ],

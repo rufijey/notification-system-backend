@@ -3,6 +3,7 @@ import { Channel, ChannelRole } from '../../domain/channels/channel.entity';
 
 export interface PrismaChannelWithMembers extends PrismaChannel {
   members: PrismaChannelMember[];
+  photo?: { url: string } | null;
 }
 
 export class ChannelMapper {
@@ -15,6 +16,7 @@ export class ChannelMapper {
         role: m.role as ChannelRole,
       })),
       channel.title ?? undefined,
+      channel.photo?.url ?? undefined,
     );
   }
 }

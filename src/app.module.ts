@@ -3,9 +3,16 @@ import { BullModule } from '@nestjs/bullmq';
 import { SharedModule } from './shared/shared.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { UsersModule } from './modules/users/users.module';
+import { UploadModule } from './modules/upload/upload.module';
+import { AdminModule } from './modules/admin/admin.module';
+
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot({
+      wildcard: true,
+    }),
     BullModule.forRoot({
       connection: {
         host: process.env.REDIS_HOST || 'redis',
@@ -15,6 +22,8 @@ import { UsersModule } from './modules/users/users.module';
     SharedModule,
     NotificationsModule,
     UsersModule,
+    UploadModule,
+    AdminModule,
   ],
   controllers: [],
   providers: [],

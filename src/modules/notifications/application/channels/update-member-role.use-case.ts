@@ -15,6 +15,8 @@ export interface UpdateMemberRoleRequest {
   newRole: ChannelRole;
 }
 
+import { BanCheckerService } from '../../../admin/infrastructure/ban-checker.service';
+
 @Injectable()
 export class UpdateMemberRoleUseCase implements IUseCase<
   UpdateMemberRoleRequest,
@@ -23,10 +25,13 @@ export class UpdateMemberRoleUseCase implements IUseCase<
   constructor(
     @Inject('CHAT_REPO')
     private readonly repository: IChannelRepository,
+    private readonly banChecker: BanCheckerService,
   ) {}
 
   async execute(request: UpdateMemberRoleRequest): Promise<void> {
     const { channelId, adminId, targetUserId, newRole } = request;
+
+    await this.banChecker.checkBan(channelId);
 
     const actorRole = await this.repository.getMemberRole(channelId, adminId);
     if (actorRole !== ChannelRole.ADMIN) {

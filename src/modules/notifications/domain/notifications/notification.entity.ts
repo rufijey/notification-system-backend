@@ -13,6 +13,7 @@ export class Notification {
     public readonly clientNotificationId?: string,
     public readonly priority: NotificationPriority = NotificationPriority.MEDIUM,
     public readonly parentNotificationId?: string,
+    public readonly attachments?: string[],
   ) { }
 
   /**
@@ -25,6 +26,7 @@ export class Notification {
     text: string,
     priority: NotificationPriority = NotificationPriority.MEDIUM,
     clientNotificationId?: string,
+    attachments?: string[],
   ): Notification {
     return new Notification(
       randomUUID(),
@@ -35,6 +37,8 @@ export class Notification {
       new Date(),
       clientNotificationId,
       priority,
+      undefined,
+      attachments,
     );
   }
 
@@ -48,6 +52,7 @@ export class Notification {
     senderId: string,
     text: string,
     clientNotificationId?: string,
+    attachments?: string[],
   ): Notification {
     return new Notification(
       randomUUID(),
@@ -59,6 +64,7 @@ export class Notification {
       clientNotificationId,
       NotificationPriority.NONE,
       parentNotificationId,
+      attachments,
     );
   }
 

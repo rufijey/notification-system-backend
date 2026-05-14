@@ -5,6 +5,7 @@ export interface SearchChannelResult {
   channelId: string;
   title: string;
   isMember: boolean;
+  photoUrl?: string;
 }
 
 @Injectable()
@@ -36,6 +37,7 @@ export class SearchChannelsUseCase {
         channelId: channel.id,
         title: channel.title || 'Channel',
         isMember,
+        photoUrl: channel.photoUrl,
       };
     });
   }
