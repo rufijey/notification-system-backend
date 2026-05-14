@@ -82,6 +82,8 @@ export class NotificationsController {
       dto.title,
       dto.id,
       dto.photoUrl,
+      dto.isEncrypted,
+      dto.encryptedKeys,
     );
 
     const response = {

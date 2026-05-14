@@ -11,6 +11,7 @@ export class UserMapper {
       user.role as unknown as UserRole,
       user.createdAt,
       user.updatedAt,
+      user.publicKey ?? undefined,
       user.avatar?.url,
     );
   }
@@ -22,6 +23,7 @@ export class UserMapper {
       email: user.email,
       passwordHash: user.passwordHash,
       role: user.role as unknown as PrismaUserRole,
+      publicKey: user.publicKey ?? null,
     };
   }
 }

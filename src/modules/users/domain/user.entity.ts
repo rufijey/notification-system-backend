@@ -12,6 +12,7 @@ export class User {
     public readonly role: UserRole,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+    public readonly publicKey?: string,
     public readonly avatarUrl?: string,
   ) {}
 }

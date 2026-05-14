@@ -19,15 +19,26 @@ export class PrismaChannelRepository implements IChannelRepository {
     title?: string,
     id?: string,
     photoUrl?: string,
+    isEncrypted?: boolean,
+    encryptedKeys?: Record<string, string>,
   ): Promise<Channel> {
     const channel = await this.prisma.channel.create({
       data: {
         id: id || undefined,
         title: title || 'New Channel',
+        isEncrypted: isEncrypted || false,
         members: {
           create: [
-            { userId: creatorId, role: PrismaChannelRole.ADMIN },
-            ...memberIds.map((userId) => ({ userId, role: PrismaChannelRole.SUBSCRIBER })),
+            { 
+              userId: creatorId, 
+              role: PrismaChannelRole.ADMIN,
+              encryptedKey: encryptedKeys?.[creatorId] || undefined,
+            },
+            ...memberIds.map((userId) => ({ 
+              userId, 
+              role: PrismaChannelRole.SUBSCRIBER,
+              encryptedKey: encryptedKeys?.[userId] || undefined,
+            })),
           ],
         },
         photo: photoUrl ? { create: { url: photoUrl } } : undefined,
@@ -140,9 +151,10 @@ export class PrismaChannelRepository implements IChannelRepository {
     userId: string,
     sequence: number,
   ): Promise<void> {
-    await this.prisma.channelMember.update({
+    await this.prisma.channelMember.updateMany({
       where: {
-        channelId_userId: { channelId, userId },
+        channelId,
+        userId,
       },
       data: {
         lastReadSequence: sequence,
@@ -230,9 +242,10 @@ export class PrismaChannelRepository implements IChannelRepository {
   }
 
   async removeMember(channelId: string, userId: string): Promise<void> {
-    await this.prisma.channelMember.delete({
+    await this.prisma.channelMember.deleteMany({
       where: {
-        channelId_userId: { channelId, userId },
+        channelId,
+        userId,
       },
     });
   }

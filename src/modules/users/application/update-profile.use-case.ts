@@ -6,6 +6,7 @@ interface UpdateProfileInput {
   username: string;
   fullName?: string;
   avatarUrl?: string;
+  publicKey?: string;
 }
 
 @Injectable()
@@ -15,7 +16,7 @@ export class UpdateProfileUseCase {
     private readonly usersRepository: IUsersRepository,
   ) {}
 
-  async execute(input: UpdateProfileInput): Promise<{ username: string; fullName: string; avatarUrl?: string }> {
+  async execute(input: UpdateProfileInput): Promise<{ username: string; fullName: string; avatarUrl?: string; publicKey?: string }> {
     const user = await this.usersRepository.findByUsername(input.username);
     if (!user) {
       throw new NotFoundException(`User with username ${input.username} not found`);
@@ -29,6 +30,7 @@ export class UpdateProfileUseCase {
       user.role,
       user.createdAt,
       new Date(),
+      input.publicKey ?? user.publicKey,
       input.avatarUrl ?? user.avatarUrl
     );
 
@@ -38,6 +40,7 @@ export class UpdateProfileUseCase {
       username: updatedUser.username,
       fullName: updatedUser.fullName,
       avatarUrl: updatedUser.avatarUrl,
+      publicKey: updatedUser.publicKey,
     };
   }
 }

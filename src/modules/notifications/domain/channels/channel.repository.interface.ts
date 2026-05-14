@@ -36,6 +36,8 @@ export interface IChannelRepository {
     title?: string,
     id?: string,
     photoUrl?: string,
+    isEncrypted?: boolean,
+    encryptedKeys?: Record<string, string>,
   ): Promise<Channel>;
   findById(id: string): Promise<Channel | null>;
   findUserChannelIds(userId: string): Promise<string[]>;

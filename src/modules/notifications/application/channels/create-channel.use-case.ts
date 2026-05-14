@@ -26,6 +26,8 @@ export class CreateChannelUseCase {
     title?: string,
     id?: string,
     photoUrl?: string,
+    isEncrypted?: boolean,
+    encryptedKeys?: Record<string, string>,
   ): Promise<Channel> {
     for (const memberId of [creatorId, ...memberIds]) {
       const user = await this.usersRepository.findByUsername(memberId);
@@ -43,6 +45,14 @@ export class CreateChannelUseCase {
       }
     }
 
-    return this.channelRepository.create(creatorId, memberIds, title, id, photoUrl);
+    return this.channelRepository.create(
+      creatorId,
+      memberIds,
+      title,
+      id,
+      photoUrl,
+      isEncrypted,
+      encryptedKeys,
+    );
   }
 }

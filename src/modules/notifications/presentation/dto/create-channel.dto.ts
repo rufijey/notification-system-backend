@@ -16,4 +16,10 @@ export class CreateChannelDto {
   @IsString()
   @IsOptional()
   photoUrl?: string;
+
+  @IsOptional()
+  isEncrypted?: boolean;
+
+  @IsOptional()
+  encryptedKeys?: Record<string, string>;
 }

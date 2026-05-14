@@ -11,9 +11,11 @@ export class ChannelMapper {
     return new Channel(
       channel.id,
       channel.createdAt,
+      channel.isEncrypted,
       channel.members.map((m) => ({
         userId: m.userId,
         role: m.role as ChannelRole,
+        encryptedKey: m.encryptedKey ?? undefined,
       })),
       channel.title ?? undefined,
       channel.photo?.url ?? undefined,

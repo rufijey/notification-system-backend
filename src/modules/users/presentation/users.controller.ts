@@ -150,14 +150,29 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async updateProfile(
     @Req() req: RequestWithUser,
-    @Body() body: { fullName?: string; avatarUrl?: string },
+    @Body() body: { fullName?: string; avatarUrl?: string; publicKey?: string },
   ) {
     const username = req.user.sub;
     return this.updateProfileUseCase.execute({
       username,
       fullName: body.fullName,
       avatarUrl: body.avatarUrl,
+      publicKey: body.publicKey,
     });
+  }
+
+  @Post('public-keys')
+  @UseGuards(AtGuard)
+  @HttpCode(HttpStatus.OK)
+  async getPublicKeys(@Body() body: { usernames: string[] }) {
+    const users = await this.usersRepository.findByUsernames(body.usernames);
+    const result: Record<string, string> = {};
+    users.forEach((user) => {
+      if (user.publicKey) {
+        result[user.username] = user.publicKey;
+      }
+    });
+    return result;
   }
 
   @Get(':username')

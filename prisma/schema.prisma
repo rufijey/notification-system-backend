@@ -47,6 +47,7 @@ model User {
   updatedAt         DateTime           @updatedAt
   reports           ChannelReport[]    @relation("UserReports")
   issuedBans        ChannelBan[]       @relation("AdminBans")
+  publicKey         String?
 }
 
 model UserAvatar {
@@ -60,6 +61,7 @@ model UserAvatar {
 model Channel {
   id            String          @id @default(uuid())
   title         String
+  isEncrypted   Boolean         @default(false)
   members       ChannelMember[]
   notifications Notification[]
   photo         ChannelPhoto?
@@ -123,6 +125,7 @@ model ChannelMember {
   role             ChannelRole @default(SUBSCRIBER)
   joinedAt         DateTime    @default(now())
   lastReadSequence Int         @default(0)
+  encryptedKey     String?
 
   @@id([channelId, userId])
 }

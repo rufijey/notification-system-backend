@@ -3,6 +3,7 @@ import { RefreshToken } from './refresh-token.entity';
 
 export interface IUsersRepository {
   findByUsername(username: string): Promise<User | null>;
+  findByUsernames(usernames: string[]): Promise<User[]>;
   findByEmail(email: string): Promise<User | null>;
   create(user: User): Promise<void>;
   save(user: User): Promise<void>;

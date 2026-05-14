@@ -7,12 +7,14 @@ export enum ChannelRole {
 export interface ChannelMemberEntity {
   userId: string;
   role: ChannelRole;
+  encryptedKey?: string;
 }
 
 export class Channel {
   constructor(
     public readonly id: string,
     public readonly createdAt: Date,
+    public readonly isEncrypted: boolean = false,
     public readonly members: ChannelMemberEntity[] = [],
     public readonly title?: string,
     public readonly photoUrl?: string,

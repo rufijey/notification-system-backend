@@ -16,6 +16,14 @@ export class PrismaUsersRepository implements IUsersRepository {
     return UserMapper.toDomain(user);
   }
 
+  async findByUsernames(usernames: string[]): Promise<User[]> {
+    const users = await this.prisma.user.findMany({
+      where: { username: { in: usernames } },
+      include: { avatar: true },
+    });
+    return users.map((u) => UserMapper.toDomain(u));
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({ where: { email }, include: { avatar: true } });
     if (!user) return null;
@@ -37,6 +45,7 @@ export class PrismaUsersRepository implements IUsersRepository {
         email: data.email,
         passwordHash: data.passwordHash,
         role: data.role,
+        publicKey: data.publicKey,
       },
       create: data,
     });
