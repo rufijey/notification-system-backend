@@ -26,6 +26,7 @@ export class UpdateProfileUseCase {
       input.fullName ?? user.fullName,
       user.email,
       user.passwordHash,
+      user.role,
       user.createdAt,
       new Date(),
       input.avatarUrl ?? user.avatarUrl
