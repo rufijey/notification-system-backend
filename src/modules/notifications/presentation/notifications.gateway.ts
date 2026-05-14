@@ -11,7 +11,6 @@ import { Server, Socket } from 'socket.io';
 import { UseGuards } from '@nestjs/common';
 import { AcknowledgeNotificationUseCase } from '../application/notifications/acknowledge-notification.use-case';
 import { ReadNotificationUseCase } from '../application/notifications/read-notification.use-case';
-import { SendPendingOnConnectUseCase } from '../application/notifications/send-pending-on-connect.use-case';
 import { ConnectionTrackerService } from '../infrastructure/gateway/connection-tracker.service';
 import { WsAtGuard } from './guards/ws-at.guard';
 import { SocketEvent } from '../domain/notifications/socket-events.enum';
@@ -37,7 +36,6 @@ export class NotificationsGateway
     private readonly connectionTracker: ConnectionTrackerService,
     private readonly acknowledgeUseCase: AcknowledgeNotificationUseCase,
     private readonly readUseCase: ReadNotificationUseCase,
-    private readonly sendPendingUseCase: SendPendingOnConnectUseCase,
     private readonly syncNotificationsUseCase: SyncNotificationsUseCase,
     private readonly wsConnectionService: WsConnectionService,
   ) { }

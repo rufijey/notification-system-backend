@@ -10,6 +10,7 @@ import {
   MESSENGER_SENDER,
 } from '../ports/notifications-sender.port';
 import { IChannelRepository } from '../../domain/channels/channel.repository.interface';
+import { Channel } from '../../domain/channels/channel.entity';
 import { IFailedNotificationsQueue, FAILED_NOTIFICATIONS_QUEUE } from '../ports/failed-notifications-queue.port';
 import { ADMIN_REPOSITORY, IAdminRepository } from '../../../admin/domain/admin.repository.interface';
 
@@ -80,9 +81,9 @@ export class ProcessNotificationUseCase {
         senderId,
       );
 
-      if (role === 'SUBSCRIBER' && !parentNotificationId) {
+      if (!Channel.canMemberPost(role, !!parentNotificationId)) {
         console.warn(
-          `[Validation] Sender ${senderId} has ${role} role in channel ${channelId} but tried to create a root notification. Skipping creation.`,
+          `[Validation] Sender ${senderId} has ${role} role in channel ${channelId} but tried to create a notification (isReply: ${!!parentNotificationId}). Skipping creation.`,
         );
         return { success: false, status: 'sent' };
       }

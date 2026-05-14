@@ -17,4 +17,22 @@ export class Channel {
     public readonly title?: string,
     public readonly photoUrl?: string,
   ) {}
+
+  static canMemberPost(role: ChannelRole | null, isReply: boolean): boolean {
+    if (!role) return false;
+    
+    if (role === ChannelRole.ADMIN || role === ChannelRole.PUBLISHER) {
+      return true;
+    }
+    
+    if (role === ChannelRole.SUBSCRIBER && isReply) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  static canMemberDelete(role: ChannelRole | null): boolean {
+    return role === ChannelRole.ADMIN;
+  }
 }

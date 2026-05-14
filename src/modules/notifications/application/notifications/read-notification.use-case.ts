@@ -35,11 +35,6 @@ export class ReadNotificationUseCase {
         notification.sequence,
       );
 
-      const newUnreadCount = await this.channelRepository.getUnreadCount(
-        notification.channelId,
-        userId,
-      );
-
       this.sender.sendMessageRead(notification.channelId, {
         channelId: notification.channelId,
         userId: userId,

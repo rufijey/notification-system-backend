@@ -2,6 +2,7 @@ import { Inject, Injectable, ForbiddenException, NotFoundException } from '@nest
 import { IUseCase } from '../../../../shared/application/use-case.interface';
 import { INotificationRepository } from '../../domain/notifications/notification.repository.interface';
 import { IChannelRepository } from '../../domain/channels/channel.repository.interface';
+import { Channel } from '../../domain/channels/channel.entity';
 import { INotificationsSender, MESSENGER_SENDER } from '../ports/notifications-sender.port';
 
 interface DeleteNotificationRequest {
@@ -30,8 +31,8 @@ export class DeleteNotificationUseCase implements IUseCase<DeleteNotificationReq
 
     const role = await this.channelRepository.getMemberRole(notification.channelId, userId);
     
-    // Only Admin can delete messages
-    if (role !== 'ADMIN') {
+    // Use domain logic to check if member can delete
+    if (!Channel.canMemberDelete(role)) {
       throw new ForbiddenException('Only admins can delete notifications');
     }
 
